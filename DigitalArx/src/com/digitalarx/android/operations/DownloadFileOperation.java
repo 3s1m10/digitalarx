@@ -147,9 +147,7 @@ public class DownloadFileOperation extends RemoteOperation {
         
         if (result.isSuccess()) {
             
-        	// gipostaff!!!
-        	// gipostaff 2!!!
-        	
+        	//giorgiojalamoff
         	
         	mModificationTimestamp = mDownloadOperation.getModificationTimestamp();
             newFile = new File(getSavePath());
