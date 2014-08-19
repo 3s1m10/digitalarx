@@ -1,3 +1,5 @@
+// vaffanculo
+
 package com.digitalarx.android.utils;
 
 import javax.crypto.Cipher;
