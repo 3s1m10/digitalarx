@@ -16,11 +16,11 @@
  */
 package com.digitalarx.android;
 
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
-import com.owncloud.android.lib.common.OwnCloudClientManagerFactory.Policy;
-
 import android.app.Application;
 import android.content.Context;
+
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory;
+import com.owncloud.android.lib.common.OwnCloudClientManagerFactory.Policy;
 /**
  * Main Application of the project
  * 
@@ -103,6 +103,10 @@ public class MainApp extends Application {
     
     public static String getCryptFolder() {
     	return getAppContext().getResources().getString(R.string.crypt_folder);
+    }
+    
+    public static String getCryptKey() {
+    	return getAppContext().getResources().getString(R.string.crypt_key);
     }
     
     public static String getMobileSyncFolder() {
