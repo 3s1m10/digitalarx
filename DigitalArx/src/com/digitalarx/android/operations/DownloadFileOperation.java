@@ -23,18 +23,18 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import android.accounts.Account;
+import android.webkit.MimeTypeMap;
+
 import com.digitalarx.android.datamodel.OCFile;
-import com.owncloud.android.lib.common.network.OnDatatransferProgressListener;
+import com.digitalarx.android.utils.FileStorageUtils;
+import com.digitalarx.android.utils.Log_OC;
 import com.owncloud.android.lib.common.OwnCloudClient;
+import com.owncloud.android.lib.common.network.OnDatatransferProgressListener;
 import com.owncloud.android.lib.common.operations.OperationCancelledException;
 import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.owncloud.android.lib.common.operations.RemoteOperationResult;
 import com.owncloud.android.lib.resources.files.DownloadRemoteFileOperation;
-import com.digitalarx.android.utils.FileStorageUtils;
-import com.digitalarx.android.utils.Log_OC;
-
-import android.accounts.Account;
-import android.webkit.MimeTypeMap;
 
 /**
  * Remote mDownloadOperation performing the download of a file to an ownCloud server
@@ -146,7 +146,11 @@ public class DownloadFileOperation extends RemoteOperation {
         result = mDownloadOperation.execute(client);
         
         if (result.isSuccess()) {
-            mModificationTimestamp = mDownloadOperation.getModificationTimestamp();
+            
+        	// gipostaff!!!
+        	
+        	
+        	mModificationTimestamp = mDownloadOperation.getModificationTimestamp();
             newFile = new File(getSavePath());
             newFile.getParentFile().mkdirs();
             moved = tmpFile.renameTo(newFile);
