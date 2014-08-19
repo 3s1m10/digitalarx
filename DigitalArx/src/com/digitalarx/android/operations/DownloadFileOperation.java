@@ -147,8 +147,8 @@ public class DownloadFileOperation extends RemoteOperation {
         
         if (result.isSuccess()) {
             
-        	//giorgiojalamoff :P
-        	
+        	// zxc
+        	 
         	mModificationTimestamp = mDownloadOperation.getModificationTimestamp();
             newFile = new File(getSavePath());
             newFile.getParentFile().mkdirs();
