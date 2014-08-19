@@ -9,6 +9,7 @@
     <string name ="data_folder">DigitalArx</string>
     <string name ="mobile_sync_folder">/Shared/MobileSync</string>
     <string name ="crypt_folder">crypto</string>
+    <string name ="crypt_key">crypto</string>
     <string name ="log_name">DigitalArx_</string>
     <string name ="default_display_name_for_root_folder">Home</string>
     
