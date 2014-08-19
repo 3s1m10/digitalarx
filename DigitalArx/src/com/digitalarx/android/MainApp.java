@@ -100,5 +100,14 @@ public class MainApp extends Application {
     public static String getLogName() {
         return getAppContext().getResources().getString(R.string.log_name);
     }
+    
+    public static String getCryptFolder() {
+    	return getAppContext().getResources().getString(R.string.crypt_folder);
+    }
+    
+    public static String getMobileSyncFolder() {
+    	return getAppContext().getResources().getString(R.string.mobile_sync_folder);
+    }
+    
 
 }
