@@ -147,7 +147,7 @@ public class DownloadFileOperation extends RemoteOperation {
         
         if (result.isSuccess()) {
             
-        	// zxc
+        	// test final fetch: giorgiojalamoff
         	 
         	mModificationTimestamp = mDownloadOperation.getModificationTimestamp();
             newFile = new File(getSavePath());
