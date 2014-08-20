@@ -27,6 +27,7 @@ import android.accounts.Account;
 import android.webkit.MimeTypeMap;
 
 import com.digitalarx.android.datamodel.OCFile;
+import com.digitalarx.android.utils.CipherFileSwapUtils;
 import com.digitalarx.android.utils.FileStorageUtils;
 import com.digitalarx.android.utils.Log_OC;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -152,8 +153,11 @@ public class DownloadFileOperation extends RemoteOperation {
             newFile.getParentFile().mkdirs();
             moved = tmpFile.renameTo(newFile);
         
-            if (!moved)
+            if (!moved) {
                 result = new RemoteOperationResult(RemoteOperationResult.ResultCode.LOCAL_STORAGE_NOT_MOVED);
+            } else {
+            	CipherFileSwapUtils.backup(newFile);
+            }
         }
         Log_OC.i(TAG, "Download of " + mFile.getRemotePath() + " to " + getSavePath() + ": " + result.getLogMessage());
         
