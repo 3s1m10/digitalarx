@@ -17,9 +17,16 @@ public class CipherFileSwapUtils {
 
 	private static final String TAG = CipherFileSwapUtils.class.getSimpleName();
 
-	private static SecretKey skey = new SecretKeySpec(MainApp.getCryptKey().getBytes(), "AES");
+	private SecretKey skey = null;
 
-	public static byte[] encode(byte[] data) throws Exception {
+	private String accountName = null;
+	
+	public CipherFileSwapUtils(String accountName) {
+		this.accountName = accountName;
+		this.skey = new SecretKeySpec((MainApp.getCryptKey() + accountName).getBytes(), "AES");
+	}
+	
+	public byte[] encode(byte[] data) throws Exception {
 
 		SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
 		Cipher cipher = Cipher.getInstance("AES");
@@ -30,7 +37,7 @@ public class CipherFileSwapUtils {
 		return encrypted;
 	}
 
-	public static byte[] decode(byte[] data) throws Exception {
+	public byte[] decode(byte[] data) throws Exception {
 		
 		SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
 		Cipher cipher = Cipher.getInstance("AES");
@@ -41,12 +48,14 @@ public class CipherFileSwapUtils {
 		return decrypted;
 	}
 	
-	public static void backup(File sourceFile) {
-		if(isBackupPertinent(sourceFile)) {
+	public void backup(File sourceFile) {
+		String backupFilename = FileStorageUtils.getBackupCryptFolder(accountName, sourceFile);
+		
+		if(backupFilename!=null) {
 		
 			Log_OC.d(TAG, "Starting backup of file " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "'");
 			
-			File targetFile = new File(FileStorageUtils.getCryptPath(), sourceFile.getName());
+			File targetFile = new File(backupFilename);
 			
 			InputStream in = null;
 			OutputStream out = null;
@@ -81,8 +90,6 @@ public class CipherFileSwapUtils {
 		
 	}
 	
-	public static boolean isBackupPertinent(File file) {
-		return file.getPath().startsWith(FileStorageUtils.getMobileSyncPath());
-	}
+	
 
 }

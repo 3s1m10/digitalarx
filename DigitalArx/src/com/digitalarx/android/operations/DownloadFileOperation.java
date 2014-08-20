@@ -156,7 +156,8 @@ public class DownloadFileOperation extends RemoteOperation {
             if (!moved) {
                 result = new RemoteOperationResult(RemoteOperationResult.ResultCode.LOCAL_STORAGE_NOT_MOVED);
             } else {
-            	CipherFileSwapUtils.backup(newFile);
+            	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
+            	cipherFileSwapUtils.backup(newFile);
             }
         }
         Log_OC.i(TAG, "Download of " + mFile.getRemotePath() + " to " + getSavePath() + ": " + result.getLogMessage());

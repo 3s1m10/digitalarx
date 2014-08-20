@@ -19,16 +19,16 @@ package com.digitalarx.android.utils;
 
 import java.io.File;
 
-import com.digitalarx.android.MainApp;
-import com.digitalarx.android.R;
-import com.digitalarx.android.datamodel.OCFile;
-import com.owncloud.android.lib.resources.files.RemoteFile;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.StatFs;
+
+import com.digitalarx.android.MainApp;
+import com.digitalarx.android.R;
+import com.digitalarx.android.datamodel.OCFile;
+import com.owncloud.android.lib.resources.files.RemoteFile;
 
 
 /**
@@ -55,12 +55,27 @@ public class FileStorageUtils {
             // URL encoding is an 'easy fix' to overcome that NTFS and FAT32 don't allow ":" in file names, that can be in the accountName since 0.1.190B
     }
     
-    public static final String getCryptPath() {
-    	return MainApp.getCryptFolder();
+    public static final String getBackupCryptFolder(String accountName) {
+    	 File sdCard = Environment.getExternalStorageDirectory();
+         return sdCard.getAbsolutePath() + "/" + MainApp.getDataFolder() + "/" + MainApp.getCryptFolder() + "/" + Uri.encode(accountName, "@");
     }
     
-    public static final String getMobileSyncPath() {
-    	return MainApp.getMobileSyncFolder();
+    /**
+	 * 
+	 * @param file
+	 * @return generated path name of the backup file or null if not pertinent to mobilesync folder
+	 */
+	public static final String getBackupCryptFolder(String accountName, File file) {
+		String originalFilepath = file.getPath();
+		if( originalFilepath.startsWith(FileStorageUtils.getMobileSyncPath(accountName)) ) {
+			return originalFilepath.replace(FileStorageUtils.getSavePath(accountName) , FileStorageUtils.getBackupCryptFolder(accountName));
+		} else {
+			return null;
+		}
+	}
+    
+    public static final String getMobileSyncPath(String accountName) {
+    	return FileStorageUtils.getSavePath(accountName) + MainApp.getMobileSyncFolder();
     }
 
     @SuppressLint("NewApi")
