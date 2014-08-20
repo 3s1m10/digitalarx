@@ -4,12 +4,12 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-public class CipherUtil {
+public class CipherUtils {
 
 
 	private static SecretKey skey = null;
 
-	public CipherUtil(String password) {
+	public CipherUtils(String password) {
 		skey = new SecretKeySpec(password.getBytes(), "AES");
 	}
 
