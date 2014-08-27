@@ -61,19 +61,35 @@ public class FileStorageUtils {
     }
     
     /**
+	 * mauz added
 	 * 
 	 * @param file
 	 * @return generated path name of the backup file or null if not pertinent to mobilesync folder
 	 */
-	public static final String getBackupCryptFolder(String accountName, File file) {
-		String originalFilepath = file.getPath();
-		if( originalFilepath.startsWith(FileStorageUtils.getMobileSyncPath(accountName)) ) {
-			return originalFilepath.replace(FileStorageUtils.getSavePath(accountName) , FileStorageUtils.getBackupCryptFolder(accountName));
+	public static final String getBackupFilename(String accountName, File sourceFile) {
+		String sourceFilepath = sourceFile.getPath();
+		if( sourceFilepath.startsWith(FileStorageUtils.getMobileSyncPath(accountName)) ) {
+			return sourceFilepath.replace(FileStorageUtils.getSavePath(accountName) , FileStorageUtils.getBackupCryptFolder(accountName));
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * mauz added
+	 * 
+	 * null if not pertinent to mobilesync
+	 */
+	public static final String getRestoreFilename(String accountName, File backupFile) {
+		String backupFilepath = backupFile.getPath();
+		if(backupFilepath.startsWith(FileStorageUtils.getBackupCryptFolder(accountName)) ) {
+			return backupFilepath.replace(FileStorageUtils.getBackupCryptFolder(accountName), FileStorageUtils.getSavePath(accountName));
 		} else {
 			return null;
 		}
 	}
     
+	// mauz added
     public static final String getMobileSyncPath(String accountName) {
     	return FileStorageUtils.getSavePath(accountName) + MainApp.getMobileSyncFolder();
     }
