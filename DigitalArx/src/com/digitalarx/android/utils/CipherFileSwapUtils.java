@@ -144,16 +144,20 @@ public class CipherFileSwapUtils {
 	public void fullRestore() {
 		File backupCryptFolder = new File(FileStorageUtils.getBackupCryptFolder(accountName));
 		File[] cryptoFiles = backupCryptFolder.listFiles();
-		for (File cryptoFile : cryptoFiles) {
-			restore(cryptoFile);
+		if(cryptoFiles!=null) {
+			for (File cryptoFile : cryptoFiles) {
+				restore(cryptoFile);
+			}
 		}
 	}
 	
 	public void fullBackup() {
 		File sourceFolder = new File(FileStorageUtils.getSavePath(accountName) + FileStorageUtils.getMobileSyncPath(accountName));
 		File[] sourceFiles = sourceFolder.listFiles();
-		for (File sourceFile : sourceFiles) {
-			backup(sourceFile);
+		if(sourceFiles!=null) {
+			for (File sourceFile : sourceFiles) {
+				backup(sourceFile);
+			}
 		}
 	}
 	
