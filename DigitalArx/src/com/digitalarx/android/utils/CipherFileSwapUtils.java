@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -17,40 +22,66 @@ public class CipherFileSwapUtils {
 
 	private static final String TAG = CipherFileSwapUtils.class.getSimpleName();
 
-	private SecretKey skey = null;
-
 	private String accountName = null;
 	
 	public CipherFileSwapUtils(String accountName) {
 		this.accountName = accountName;
-		
-		String key = accountName + MainApp.getCryptKey();
-		key = key.substring(0, 16);
-		
-		this.skey = new SecretKeySpec(key.getBytes(), "AES");
 	}
 	
-	public byte[] encode(byte[] data) throws Exception {
-
-		SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
-		Cipher cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-
-		byte[] encrypted = cipher.doFinal(data);
-
-		return encrypted;
+	public Cipher createCipher() {
+		String key = accountName + MainApp.getCryptKey();
+		key = key.substring(0, 16);
+		byte[] keyStart = key.getBytes();
+		Cipher cipher = null;
+		try {
+			KeyGenerator kgen = KeyGenerator.getInstance("AES");
+			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+			sr.setSeed(keyStart);
+			kgen.init(128, sr); // 192 and 256 bits may not be available
+			SecretKey skey = kgen.generateKey();
+			skey = new SecretKeySpec(skey.getEncoded(), "AES");
+			
+			//cipher.init(Cipher.DECRYPT_MODE, skey, ivSpec);
+			cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, skey);
+			
+		} catch (NoSuchAlgorithmException e) {
+			Log_OC.e(TAG, "Unsupported encoding... failed getting cipher", e);
+		} catch (NoSuchPaddingException e) {
+			Log_OC.e(TAG, "Unsupported padding... failed getting cipher", e);
+		} catch (InvalidKeyException e) {
+			Log_OC.e(TAG, "Invalid key... failed getting cipher", e);
+		}
+		return cipher;
 	}
+	
+//	public byte[] encode(byte[] data) throws Exception {
+//
+//		//SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
+//		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//		
+//		//cipher.init(Cipher.ENCRYPT_MODE, skey, ivSpec);
+//		
+//		cipher.init(Cipher.ENCRYPT_MODE, skey);
+//
+//		byte[] encrypted = Base64.encode(cipher.doFinal(data), Base64.DEFAULT);
+//
+//		return encrypted;
+//	}
 
-	public byte[] decode(byte[] data) throws Exception {
-		
-		SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
-		Cipher cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.DECRYPT_MODE, skeySpec);
-
-		byte[] decrypted = cipher.doFinal(data);
-
-		return decrypted;
-	}
+//	public byte[] decode(byte[] data) throws Exception {
+//		
+//		//SecretKeySpec skeySpec = new SecretKeySpec(skey.getEncoded(), "AES");
+//		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//		
+//		//cipher.init(Cipher.DECRYPT_MODE, skey, ivSpec);
+//		
+//		cipher.init(Cipher.DECRYPT_MODE, skey);
+//		
+//		byte[] decrypted = cipher.doFinal(Base64.decode(data, Base64.DEFAULT));
+//
+//		return decrypted;
+//	}
 	
 	public void backup(File sourceFile) {
 		String backupFilename = FileStorageUtils.getBackupFilename(accountName, sourceFile);
@@ -62,26 +93,36 @@ public class CipherFileSwapUtils {
 			File backupFile = new File(backupFilename);
 			backupFile.getParentFile().mkdirs();
 			
-			InputStream in = null;
-			OutputStream out = null;
+			FileInputStream fis = null;
+			FileOutputStream fos = null;
+			CipherOutputStream cos = null;;
 			try {
-				in = new FileInputStream(sourceFile);
-				out = new FileOutputStream(backupFile);
-				byte[] buf = new byte[1024];
-				int len;
-				while ((len = in.read(buf)) > 0){
-					out.write(encode(buf), 0, len);
+				fis = new FileInputStream(sourceFile);
+				fos = new FileOutputStream(backupFile);
+				cos = new CipherOutputStream(fos, createCipher());
+				
+				byte[] block = new byte[1024];
+				int i;
+				while ((i = fis.read(block)) != -1) {
+					cos.write(block, 0, i);
 				}
+			
 			} catch (Exception e) { // IO and FOF
 	            Log_OC.e(TAG, "Exception while encoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
 			} finally {
-	            try {
-	                if (in != null) in.close();
+				try {
+	                if (fis != null) fis.close();
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + sourceFile.getName() + "' (ignoring)", e);
 	            }
+				try {
+	                if (cos != null) cos.close();
+	            } catch (IOException e) {
+	                Log_OC.d(TAG, "Weird exception while closing ciphered output stream for '" + backupFile.getName() + "' (ignoring)", e);
+	            }
+				
 	            try {
-	                if (out != null) out.close();
+	                if (fos != null) fos.close();
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + backupFile.getName() + "' (ignoring)", e);
 	            }
@@ -89,7 +130,48 @@ public class CipherFileSwapUtils {
 		} else {
 			Log_OC.d(TAG, "File " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "' is not pertinent with mobilesync");
 		}
+			
 	}
+	
+//	public void backup2(File sourceFile) {
+//		String backupFilename = FileStorageUtils.getBackupFilename(accountName, sourceFile);
+//		
+//		if(backupFilename!=null) {
+//		
+//			Log_OC.d(TAG, "Starting backup of file " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "'");
+//			
+//			File backupFile = new File(backupFilename);
+//			backupFile.getParentFile().mkdirs();
+//			
+//			InputStream in = null;
+//			OutputStream out = null;
+//			try {
+//				in = new FileInputStream(sourceFile);
+//				out = new FileOutputStream(backupFile);
+//				byte[] encodedBuf = null;
+//				byte[] decodedBuf = new byte[1024];
+//				while (in.read(decodedBuf) > 0){
+//					encodedBuf = encode(decodedBuf);
+//					out.write(encodedBuf);
+//				}
+//			} catch (Exception e) { // IO and FOF
+//	            Log_OC.e(TAG, "Exception while encoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
+//			} finally {
+//	            try {
+//	                if (in != null) in.close();
+//	            } catch (IOException e) {
+//	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + sourceFile.getName() + "' (ignoring)", e);
+//	            }
+//	            try {
+//	                if (out != null) out.close();
+//	            } catch (IOException e) {
+//	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + backupFile.getName() + "' (ignoring)", e);
+//	            }
+//	        }
+//		} else {
+//			Log_OC.d(TAG, "File " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "' is not pertinent with mobilesync");
+//		}
+//	}
 	
 	public void restore(File backupFile) {
 		String sourceFilename = FileStorageUtils.getRestoreFilename(accountName, backupFile);
@@ -100,26 +182,34 @@ public class CipherFileSwapUtils {
 			File sourceFile = new File(sourceFilename);
 			sourceFile.getParentFile().mkdirs();
 			
-			InputStream in = null;
-			OutputStream out = null;
+			FileInputStream fis = null;
+			FileOutputStream fos = null;
+			CipherInputStream cis = null;
 			try {
-				in = new FileInputStream(backupFile);
-				out = new FileOutputStream(sourceFile);
-				byte[] buf = new byte[1024];
-				int len;
-				while ((len = in.read(buf)) > 0){
-					out.write(decode(buf), 0, len);
+				
+				fis = new FileInputStream(backupFile);
+				cis = new CipherInputStream(fis, createCipher());
+				fos = new FileOutputStream(sourceFile);
+				byte[] block = new byte[1024];
+				int i;
+				while ((i = cis.read(block)) != -1) {
+					fos.write(block, 0, i);
 				}
 			} catch (Exception e) { // IO and FOF
-	            Log_OC.e(TAG, "Exception while dencoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
+	            Log_OC.e(TAG, "Exception while decoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
 			} finally {
-	            try {
-	                if (in != null) in.close();
+				try {
+	                if (fis != null) fis.close();
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + backupFile.getName() + "' (ignoring)", e);
 	            }
+				try {
+	                if (cis != null) cis.close();
+	            } catch (IOException e) {
+	                Log_OC.d(TAG, "Weird exception while closing ciphered input stream for '" + backupFile.getName() + "' (ignoring)", e);
+	            }
 	            try {
-	                if (out != null) out.close();
+	                if (fos != null) fos.close();
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + sourceFile.getName() + "' (ignoring)", e);
 	            }
@@ -129,6 +219,45 @@ public class CipherFileSwapUtils {
 		}
 	}
 	
+//	public void restore2(File backupFile) {
+//		String sourceFilename = FileStorageUtils.getRestoreFilename(accountName, backupFile);
+//		if(sourceFilename!=null) {
+//			
+//			Log_OC.d(TAG, "Starting restore of file " + backupFile.getName() + " with path '" + backupFile.getPath() + "'");
+//			
+//			File sourceFile = new File(sourceFilename);
+//			sourceFile.getParentFile().mkdirs();
+//			
+//			InputStream in = null;
+//			OutputStream out = null;
+//			try {
+//				in = new FileInputStream(backupFile);
+//				out = new FileOutputStream(sourceFile);
+//				byte[] encodedBuf = new byte[1024];
+//				byte[] decodedBuf = null;
+//				while (in.read(encodedBuf) > 0){
+//					decodedBuf = decode(encodedBuf);
+//					out.write(decodedBuf);
+//				}
+//			} catch (Exception e) { // IO and FOF
+//	            Log_OC.e(TAG, "Exception while decoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
+//			} finally {
+//	            try {
+//	                if (in != null) in.close();
+//	            } catch (IOException e) {
+//	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + backupFile.getName() + "' (ignoring)", e);
+//	            }
+//	            try {
+//	                if (out != null) out.close();
+//	            } catch (IOException e) {
+//	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + sourceFile.getName() + "' (ignoring)", e);
+//	            }
+//	        }
+//		} else {
+//			Log_OC.d(TAG, "File " + backupFile.getName() + " with path '" + backupFile.getPath() + "' is not pertinent with mobilesync");
+//		}
+//	}
+//	
 	public void deleteBackup(File sourceFile) {
 		String backupFilename = FileStorageUtils.getBackupFilename(accountName, sourceFile);
 		if(backupFilename!=null) {
@@ -142,7 +271,7 @@ public class CipherFileSwapUtils {
 	}
 	
 	public void fullRestore() {
-		File backupCryptFolder = new File(FileStorageUtils.getBackupCryptFolder(accountName));
+		File backupCryptFolder = new File(FileStorageUtils.getMobileSyncBackupPathRoot(accountName));
 		File[] cryptoFiles = backupCryptFolder.listFiles();
 		if(cryptoFiles!=null) {
 			for (File cryptoFile : cryptoFiles) {
@@ -152,7 +281,7 @@ public class CipherFileSwapUtils {
 	}
 	
 	public void fullBackup() {
-		File sourceFolder = new File(FileStorageUtils.getSavePath(accountName) + FileStorageUtils.getMobileSyncPath(accountName));
+		File sourceFolder = new File(FileStorageUtils.getMobileSyncSourcePathRoot(accountName));
 		File[] sourceFiles = sourceFolder.listFiles();
 		if(sourceFiles!=null) {
 			for (File sourceFile : sourceFiles) {

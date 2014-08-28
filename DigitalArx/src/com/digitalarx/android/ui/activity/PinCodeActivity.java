@@ -366,8 +366,10 @@ public class PinCodeActivity extends SherlockFragmentActivity {
 
                     if (!mPinCodeChecked){
                         mPinCodeChecked = checkPincode();
+                    
+                    }
                     // mauz added
-                    } else {
+                    if(mPinCodeChecked) {
                     	Account account = AccountUtils.getCurrentOwnCloudAccount(getApplicationContext());
                     	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(account.name);
                     	cipherFileSwapUtils.fullRestore();

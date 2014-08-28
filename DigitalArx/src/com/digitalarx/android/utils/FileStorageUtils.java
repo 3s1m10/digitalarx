@@ -63,12 +63,12 @@ public class FileStorageUtils {
     /**
 	 * mauz added
 	 * 
-	 * @param file
+	 * @param
 	 * @return generated path name of the backup file or null if not pertinent to mobilesync folder
 	 */
 	public static final String getBackupFilename(String accountName, File sourceFile) {
 		String sourceFilepath = sourceFile.getPath();
-		if( sourceFilepath.startsWith(FileStorageUtils.getMobileSyncPath(accountName)) ) {
+		if( sourceFilepath.startsWith(FileStorageUtils.getMobileSyncSourcePathRoot(accountName)) ) {
 			return sourceFilepath.replace(FileStorageUtils.getSavePath(accountName) , FileStorageUtils.getBackupCryptFolder(accountName));
 		} else {
 			return null;
@@ -90,8 +90,12 @@ public class FileStorageUtils {
 	}
     
 	// mauz added
-    public static final String getMobileSyncPath(String accountName) {
+    public static final String getMobileSyncSourcePathRoot(String accountName) {
     	return FileStorageUtils.getSavePath(accountName) + MainApp.getMobileSyncFolder();
+    }
+    
+    public static final String getMobileSyncBackupPathRoot(String accountName) {
+    	return FileStorageUtils.getBackupCryptFolder(accountName) + MainApp.getMobileSyncFolder();
     }
 
     @SuppressLint("NewApi")
