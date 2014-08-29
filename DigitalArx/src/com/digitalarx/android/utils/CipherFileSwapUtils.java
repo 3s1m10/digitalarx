@@ -4,16 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.digitalarx.android.MainApp;
@@ -28,29 +24,38 @@ public class CipherFileSwapUtils {
 		this.accountName = accountName;
 	}
 	
-	public Cipher createCipher() {
-		String key = accountName + MainApp.getCryptKey();
-		key = key.substring(0, 16);
-		byte[] keyStart = key.getBytes();
+	public Cipher createCipherDecryptor() {
 		Cipher cipher = null;
 		try {
-			KeyGenerator kgen = KeyGenerator.getInstance("AES");
-			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-			sr.setSeed(keyStart);
-			kgen.init(128, sr); // 192 and 256 bits may not be available
-			SecretKey skey = kgen.generateKey();
-			skey = new SecretKeySpec(skey.getEncoded(), "AES");
+			String salt = MainApp.getCryptKey();
+			String key = accountName + salt;
+			key = key.substring(0, 16);
+			SecretKey skey = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
 			
-			//cipher.init(Cipher.DECRYPT_MODE, skey, ivSpec);
-			cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, skey);
+			IvParameterSpec ivSpec = new IvParameterSpec(salt.getBytes("UTF-8"));
+			cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+			cipher.init(Cipher.DECRYPT_MODE, skey, ivSpec);
 			
-		} catch (NoSuchAlgorithmException e) {
-			Log_OC.e(TAG, "Unsupported encoding... failed getting cipher", e);
-		} catch (NoSuchPaddingException e) {
-			Log_OC.e(TAG, "Unsupported padding... failed getting cipher", e);
-		} catch (InvalidKeyException e) {
-			Log_OC.e(TAG, "Invalid key... failed getting cipher", e);
+		} catch (Exception e) {
+			Log_OC.e(TAG, "Failed creating decrypt cipher", e);
+		}
+		return cipher;
+	}
+	
+	public Cipher createCipherEncryptor() {
+		Cipher cipher = null;
+		try {
+			String salt = MainApp.getCryptKey();
+			String key = accountName + salt;
+			key = key.substring(0, 16);
+			SecretKey skey = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+			
+			IvParameterSpec ivSpec = new IvParameterSpec(salt.getBytes("UTF-8"));
+			cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+			cipher.init(Cipher.ENCRYPT_MODE, skey, ivSpec);
+			
+		} catch (Exception e) {
+			Log_OC.e(TAG, "Failed creating encrypt cipher", e);
 		}
 		return cipher;
 	}
@@ -99,7 +104,7 @@ public class CipherFileSwapUtils {
 			try {
 				fis = new FileInputStream(sourceFile);
 				fos = new FileOutputStream(backupFile);
-				cos = new CipherOutputStream(fos, createCipher());
+				cos = new CipherOutputStream(fos, createCipherEncryptor());
 				
 				byte[] block = new byte[1024];
 				int i;
@@ -120,58 +125,13 @@ public class CipherFileSwapUtils {
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing ciphered output stream for '" + backupFile.getName() + "' (ignoring)", e);
 	            }
-				
-	            try {
-	                if (fos != null) fos.close();
-	            } catch (IOException e) {
-	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + backupFile.getName() + "' (ignoring)", e);
-	            }
+				Log_OC.d(TAG, "backup of file " + backupFile.getName() + " with path '" + backupFile.getPath() + "' ended");
 	        }
 		} else {
 			Log_OC.d(TAG, "File " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "' is not pertinent with mobilesync");
 		}
 			
 	}
-	
-//	public void backup2(File sourceFile) {
-//		String backupFilename = FileStorageUtils.getBackupFilename(accountName, sourceFile);
-//		
-//		if(backupFilename!=null) {
-//		
-//			Log_OC.d(TAG, "Starting backup of file " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "'");
-//			
-//			File backupFile = new File(backupFilename);
-//			backupFile.getParentFile().mkdirs();
-//			
-//			InputStream in = null;
-//			OutputStream out = null;
-//			try {
-//				in = new FileInputStream(sourceFile);
-//				out = new FileOutputStream(backupFile);
-//				byte[] encodedBuf = null;
-//				byte[] decodedBuf = new byte[1024];
-//				while (in.read(decodedBuf) > 0){
-//					encodedBuf = encode(decodedBuf);
-//					out.write(encodedBuf);
-//				}
-//			} catch (Exception e) { // IO and FOF
-//	            Log_OC.e(TAG, "Exception while encoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
-//			} finally {
-//	            try {
-//	                if (in != null) in.close();
-//	            } catch (IOException e) {
-//	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + sourceFile.getName() + "' (ignoring)", e);
-//	            }
-//	            try {
-//	                if (out != null) out.close();
-//	            } catch (IOException e) {
-//	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + backupFile.getName() + "' (ignoring)", e);
-//	            }
-//	        }
-//		} else {
-//			Log_OC.d(TAG, "File " + sourceFile.getName() + " with path '" + sourceFile.getPath() + "' is not pertinent with mobilesync");
-//		}
-//	}
 	
 	public void restore(File backupFile) {
 		String sourceFilename = FileStorageUtils.getRestoreFilename(accountName, backupFile);
@@ -188,7 +148,7 @@ public class CipherFileSwapUtils {
 			try {
 				
 				fis = new FileInputStream(backupFile);
-				cis = new CipherInputStream(fis, createCipher());
+				cis = new CipherInputStream(fis, createCipherDecryptor());
 				fos = new FileOutputStream(sourceFile);
 				byte[] block = new byte[1024];
 				int i;
@@ -199,11 +159,6 @@ public class CipherFileSwapUtils {
 	            Log_OC.e(TAG, "Exception while decoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
 			} finally {
 				try {
-	                if (fis != null) fis.close();
-	            } catch (IOException e) {
-	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + backupFile.getName() + "' (ignoring)", e);
-	            }
-				try {
 	                if (cis != null) cis.close();
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing ciphered input stream for '" + backupFile.getName() + "' (ignoring)", e);
@@ -213,51 +168,13 @@ public class CipherFileSwapUtils {
 	            } catch (IOException e) {
 	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + sourceFile.getName() + "' (ignoring)", e);
 	            }
+	            Log_OC.d(TAG, "restore of file " + backupFile.getName() + " with path '" + backupFile.getPath() + "' ended");
 	        }
 		} else {
 			Log_OC.d(TAG, "File " + backupFile.getName() + " with path '" + backupFile.getPath() + "' is not pertinent with mobilesync");
 		}
 	}
 	
-//	public void restore2(File backupFile) {
-//		String sourceFilename = FileStorageUtils.getRestoreFilename(accountName, backupFile);
-//		if(sourceFilename!=null) {
-//			
-//			Log_OC.d(TAG, "Starting restore of file " + backupFile.getName() + " with path '" + backupFile.getPath() + "'");
-//			
-//			File sourceFile = new File(sourceFilename);
-//			sourceFile.getParentFile().mkdirs();
-//			
-//			InputStream in = null;
-//			OutputStream out = null;
-//			try {
-//				in = new FileInputStream(backupFile);
-//				out = new FileOutputStream(sourceFile);
-//				byte[] encodedBuf = new byte[1024];
-//				byte[] decodedBuf = null;
-//				while (in.read(encodedBuf) > 0){
-//					decodedBuf = decode(encodedBuf);
-//					out.write(decodedBuf);
-//				}
-//			} catch (Exception e) { // IO and FOF
-//	            Log_OC.e(TAG, "Exception while decoding foreign file '" + sourceFile.getPath() + File.pathSeparator + sourceFile.getName() + "'", e);
-//			} finally {
-//	            try {
-//	                if (in != null) in.close();
-//	            } catch (IOException e) {
-//	                Log_OC.d(TAG, "Weird exception while closing input stream for '" + backupFile.getName() + "' (ignoring)", e);
-//	            }
-//	            try {
-//	                if (out != null) out.close();
-//	            } catch (IOException e) {
-//	                Log_OC.d(TAG, "Weird exception while closing output stream for '" + sourceFile.getName() + "' (ignoring)", e);
-//	            }
-//	        }
-//		} else {
-//			Log_OC.d(TAG, "File " + backupFile.getName() + " with path '" + backupFile.getPath() + "' is not pertinent with mobilesync");
-//		}
-//	}
-//	
 	public void deleteBackup(File sourceFile) {
 		String backupFilename = FileStorageUtils.getBackupFilename(accountName, sourceFile);
 		if(backupFilename!=null) {
