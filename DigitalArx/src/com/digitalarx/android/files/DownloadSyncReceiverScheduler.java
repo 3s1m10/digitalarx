@@ -48,7 +48,7 @@ public class DownloadSyncReceiverScheduler extends BroadcastReceiver {
                 PendingIntent.FLAG_CANCEL_CURRENT);
         Calendar cal = Calendar.getInstance();
         // start 30 sec after boot completed Gipo update
-        cal.add(Calendar.SECOND, 30);
+        cal.add(Calendar.SECOND, 60);
         // fetch every 30 seconds
         // InexactRepeating allows Android to optimize the energy consumption
         service.setInexactRepeating(AlarmManager.RTC_WAKEUP,

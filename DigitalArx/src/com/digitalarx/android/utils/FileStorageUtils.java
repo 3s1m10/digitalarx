@@ -56,8 +56,8 @@ public class FileStorageUtils {
     }
     
     public static final String getBackupCryptFolder(String accountName) {
-    	 File sdCard = Environment.getExternalStorageDirectory();
-         return sdCard.getAbsolutePath() + "/" + MainApp.getDataFolder() + "/" + MainApp.getCryptFolder() + "/" + Uri.encode(accountName, "@");
+    	File sdCard = Environment.getExternalStorageDirectory();
+        return sdCard.getAbsolutePath() + "/" + MainApp.getDataFolder() + "/" + MainApp.getCryptFolder() + "/" + Uri.encode(accountName, "@");
     }
     
     /**

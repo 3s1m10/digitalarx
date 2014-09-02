@@ -4,22 +4,19 @@ import java.io.File;
 import java.util.Vector;
 
 import android.accounts.Account;
-import android.annotation.TargetApi;
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
-import android.os.StrictMode;
 import android.util.Log;
 
 import com.digitalarx.android.authentication.AccountUtils;
 import com.digitalarx.android.datamodel.FileDataStorageManager;
 import com.digitalarx.android.datamodel.OCFile;
 import com.digitalarx.android.files.services.FileDownloader;
-import com.owncloud.android.lib.common.operations.RemoteOperation;
 import com.digitalarx.android.operations.SynchronizeFolderOperation;
+import com.owncloud.android.lib.common.operations.RemoteOperation;
 
 public class DownloadSyncService extends Service {
 
@@ -47,12 +44,12 @@ public class DownloadSyncService extends Service {
         return Service.START_NOT_STICKY;
     }
     
-    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    private void togglePolicy(){
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitNetwork().build();
-        StrictMode.setThreadPolicy(policy);
-
-    }
+//    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+//    private void togglePolicy(){
+//        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitNetwork().build();
+//        StrictMode.setThreadPolicy(policy);
+//
+//    }
 
     public void onCreate() {
         Log.i("DownloadSyncService", "###### onCreate @@@@@@@@@");
@@ -77,17 +74,14 @@ public class DownloadSyncService extends Service {
         // init
         OCFile firstLevelsyncDir = mFileDataStorageManager.getFileByPath(FIRST_LEVEL_SYNC_DIR);
         OCFile secondLevelsyncDir = mFileDataStorageManager.getFileByPath(SECOND_LEVEL_SYNC_DIR);
-        if(secondLevelsyncDir != null) { 
-            Log.i("DownloadSyncService", "###### got '" + FIRST_LEVEL_SYNC_DIR + "'");
-            //browseTo(sharedDir);
-        }
         if(firstLevelsyncDir != null) {
-            Log.i("DownloadSyncService", "###### got '" + SECOND_LEVEL_SYNC_DIR + "'");
+            Log.i("DownloadSyncService", "###### got '" + FIRST_LEVEL_SYNC_DIR + "'");
             //browseTo(syncDir);
         }
-
-
-        Log.i("DownloadSyncService", "###### alive");
+        if(secondLevelsyncDir != null) { 
+            Log.i("DownloadSyncService", "###### got '" + SECOND_LEVEL_SYNC_DIR + "'");
+            //browseTo(sharedDir);
+        }
 
         Vector<OCFile> firstLevelSyncFiles = mFileDataStorageManager.getFolderContent(firstLevelsyncDir);
         Vector<OCFile> secondLevelSyncFiles = mFileDataStorageManager.getFolderContent(secondLevelsyncDir);
@@ -148,7 +142,7 @@ public class DownloadSyncService extends Service {
                 Log.i("DownloadSyncService", "###### '" + ocFile.getFileName() + "' already in sync");
                 //}
             } else {
-                Log.i("DownloadSyncService", "###### '" + ocFile.getFileName() + "' does not locally exist, going to sync...");
+                Log.i("DownloadSyncService", "###### '" + ocFile.getFileName() + "', going to sync...");
                 Intent i = new Intent(this, FileDownloader.class);
                 i.putExtra(FileDownloader.EXTRA_ACCOUNT, account);
                 i.putExtra(FileDownloader.EXTRA_FILE, ocFile);

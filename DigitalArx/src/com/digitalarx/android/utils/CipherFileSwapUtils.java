@@ -98,6 +98,8 @@ public class CipherFileSwapUtils {
 			File backupFile = new File(backupFilename);
 			backupFile.getParentFile().mkdirs();
 			
+			mergeFileAttributes(sourceFile, backupFile);
+			
 			FileInputStream fis = null;
 			FileOutputStream fos = null;
 			CipherOutputStream cos = null;;
@@ -141,6 +143,8 @@ public class CipherFileSwapUtils {
 			
 			File sourceFile = new File(sourceFilename);
 			sourceFile.getParentFile().mkdirs();
+			
+			mergeFileAttributes(backupFile, sourceFile);
 			
 			FileInputStream fis = null;
 			FileOutputStream fos = null;
@@ -205,6 +209,14 @@ public class CipherFileSwapUtils {
 				backup(sourceFile);
 			}
 		}
+	}
+	
+	public void mergeFileAttributes(File source, File target) {
+		// shitty non-working
+		// see https://code.google.com/p/android/issues/detail?id=18624
+//		if (!target.setLastModified(source.lastModified())) {
+//			throw new RuntimeException("can't set lastModified file attribute");
+//		}
 	}
 	
 	
