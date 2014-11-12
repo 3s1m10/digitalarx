@@ -18,7 +18,6 @@ package com.digitalarx.android.ui.activity;
 
 import java.util.Arrays;
 
-import android.accounts.Account;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,8 +38,6 @@ import android.widget.TextView;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.digitalarx.android.R;
-import com.digitalarx.android.authentication.AccountUtils;
-import com.digitalarx.android.utils.CipherFileSwapUtils;
 import com.digitalarx.android.utils.DisplayUtils;
 
 public class PinCodeActivity extends SherlockFragmentActivity {
@@ -369,11 +366,11 @@ public class PinCodeActivity extends SherlockFragmentActivity {
                     
                     }
                     // mauz added
-                    if(mPinCodeChecked) {
+                    /*if(mPinCodeChecked) {
                     	Account account = AccountUtils.getCurrentOwnCloudAccount(getApplicationContext());
                     	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(account.name);
                     	cipherFileSwapUtils.fullRestore();
-                    }
+                    }*/
                     
                     if (mPinCodeChecked && 
                             ( mActivity.equals("FileDisplayActivity") || mActivity.equals("PreviewImageActivity") ) ){

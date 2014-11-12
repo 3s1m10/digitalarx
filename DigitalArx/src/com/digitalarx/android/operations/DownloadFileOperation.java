@@ -27,7 +27,6 @@ import android.accounts.Account;
 import android.webkit.MimeTypeMap;
 
 import com.digitalarx.android.datamodel.OCFile;
-import com.digitalarx.android.utils.CipherFileSwapUtils;
 import com.digitalarx.android.utils.FileStorageUtils;
 import com.digitalarx.android.utils.Log_OC;
 import com.owncloud.android.lib.common.OwnCloudClient;
@@ -159,11 +158,11 @@ public class DownloadFileOperation extends RemoteOperation {
         }
         Log_OC.i(TAG, "Download of " + mFile.getRemotePath() + " to " + getSavePath() + ": " + result.getLogMessage());
         
-        if(moved) {
+        /*if(moved) {
         	// mauz added
         	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
         	cipherFileSwapUtils.backup(newFile);
-        }
+        }*/
         
         return result;
     }

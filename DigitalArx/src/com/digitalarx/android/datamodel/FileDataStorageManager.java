@@ -39,7 +39,6 @@ import android.os.RemoteException;
 
 import com.digitalarx.android.MainApp;
 import com.digitalarx.android.db.ProviderMeta.ProviderTableMeta;
-import com.digitalarx.android.utils.CipherFileSwapUtils;
 import com.digitalarx.android.utils.FileStorageUtils;
 import com.digitalarx.android.utils.Log_OC;
 import com.owncloud.android.lib.resources.files.FileUtils;
@@ -321,14 +320,14 @@ public class FileDataStorageManager {
                     operations.add(ContentProviderOperation
                                     .newDelete(ContentUris.withAppendedId(ProviderTableMeta.CONTENT_URI_FILE, file.getFileId())).withSelection(where, whereArgs)
                                         .build());
-                    if (file.isDown()) {
+                    /*if (file.isDown()) {
                         // mauz added
                     	File localFile = new File(file.getStoragePath());
                     	localFile.delete();
                     	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
                     	cipherFileSwapUtils.deleteBackup(localFile);
                         // TODO move the deletion of local contents after success of deletions
-                    }
+                    }*/
                 }
             }
         }
@@ -461,8 +460,8 @@ public class FileDataStorageManager {
                 	success = fileToDelete.delete();
                     
                 	// mauz added
-                	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
-                    cipherFileSwapUtils.deleteBackup(fileToDelete);
+                	//CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
+                    //cipherFileSwapUtils.deleteBackup(fileToDelete);
                     
                     if (!removeDBData && success) {
                         // maybe unnecessary, but should be checked TODO remove if unnecessary
@@ -508,8 +507,8 @@ public class FileDataStorageManager {
 
     private boolean removeLocalFolder(OCFile folder) {
         
-    	 // mauz added
-    	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
+    	// mauz added
+    	// CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
     	
     	boolean success = true;
         File localFolder = new File(FileStorageUtils.getDefaultSavePathFor(mAccount.name, folder));
@@ -522,18 +521,18 @@ public class FileDataStorageManager {
                         success &= removeLocalFolder(file);
                         
                         // mauz added
-                        File localFile = new File(file.getStoragePath());
-                        cipherFileSwapUtils.deleteBackup(localFile);
+                        // File localFile = new File(file.getStoragePath());
+                        // cipherFileSwapUtils.deleteBackup(localFile);
                     } else {
                         if (file.isDown()) {
                             File localFile = new File(file.getStoragePath());
                             success &= localFile.delete();
                             // mauz added
-                            cipherFileSwapUtils.deleteBackup(localFile);
-                            if (success) {
+                            //cipherFileSwapUtils.deleteBackup(localFile);
+                            /*if (success) {
                                 file.setStoragePath(null);
                                 saveFile(file);
-                            }
+                            }*/
                         }
                     }
                 }
@@ -548,7 +547,7 @@ public class FileDataStorageManager {
 
     private boolean removeLocalFolder(File localFolder) {
         // mauz added
-    	CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
+    	// CipherFileSwapUtils cipherFileSwapUtils = new CipherFileSwapUtils(mAccount.name);
     	
     	boolean success = true;
         File[] localFiles = localFolder.listFiles();
@@ -560,11 +559,11 @@ public class FileDataStorageManager {
                     success &= localFile.delete();
                 }
                 // mauz added
-                cipherFileSwapUtils.deleteBackup(localFile);
+                // cipherFileSwapUtils.deleteBackup(localFile);
             }
         }
         success &= localFolder.delete();
-        cipherFileSwapUtils.deleteBackup(localFolder);
+        // cipherFileSwapUtils.deleteBackup(localFolder);
         return success;
     }
 
