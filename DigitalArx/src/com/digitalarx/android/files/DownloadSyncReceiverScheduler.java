@@ -11,8 +11,8 @@ import android.util.Log;
 
 public class DownloadSyncReceiverScheduler extends BroadcastReceiver {
 
- // restart service every 2 min, Gipo update
-    private static final long REPEAT_TIME = 1000 * 120;
+	// 5 minutes cicle
+    private static final long REPEAT_TIME = 1000 * 300;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -47,9 +47,8 @@ public class DownloadSyncReceiverScheduler extends BroadcastReceiver {
         PendingIntent pending = PendingIntent.getBroadcast(context, 0, i,
                 PendingIntent.FLAG_CANCEL_CURRENT);
         Calendar cal = Calendar.getInstance();
-        // start 30 sec after boot completed Gipo update
+        // start 60 sec after boot completed Gipo update
         cal.add(Calendar.SECOND, 60);
-        // fetch every 30 seconds
         // InexactRepeating allows Android to optimize the energy consumption
         service.setInexactRepeating(AlarmManager.RTC_WAKEUP,
                 cal.getTimeInMillis(), REPEAT_TIME, pending);
